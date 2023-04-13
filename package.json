@@ -15,6 +15,7 @@
     "typescript": "^5.0.4"
   },
   "dependencies": {
+    "postgres": "^3.3.4",
     "zx": "^7.2.1"
   }
 }
