@@ -3,8 +3,10 @@ import {readSqlFiles, SQLFile} from "./input/fileReader";
 import {DatabaseDriver} from "./db/driver";
 
 const runMigrations = async (driver: DatabaseDriver) => {
-    const sqlFiles = await readSqlFiles("sql")
-    await driver.migrationTransaction(sqlFiles)
+    const migrationFiles = await readSqlFiles("sql")
+    const establishmentFiles = await readSqlFiles("base/sql/postgres")
+    await driver.establishMigrationDatabase(establishmentFiles)
+    await driver.migrationTransaction(migrationFiles)
     await driver.closeConnection()
 }
 

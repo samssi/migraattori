@@ -10,14 +10,19 @@ export const sql = postgres({
     password: "migraattori"
 })
 
+const executeSqlFiles = async (sqlFiles: SQLFile[]) => {
+    for (const sqlFile of sqlFiles) {
+        await sql.unsafe(sqlFile.content)
+    }
+}
+
 export const postgresJs: DatabaseDriver = {
+    async establishMigrationDatabase(sqlFiles: SQLFile[]): Promise<void> {
+        await sql.begin(async sql => await executeSqlFiles(sqlFiles))
+    },
+
     async migrationTransaction(sqlFiles: SQLFile[]): Promise<void> {
-        await sql.begin(async sql => {
-            for (const sqlFile of sqlFiles) {
-                await sql.unsafe(sqlFile.content)
-            }
-        })
-        await sql.end()
+        await sql.begin(async sql => await executeSqlFiles(sqlFiles))
     },
     async closeConnection(): Promise<void> {
         await sql.end()
