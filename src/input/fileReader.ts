@@ -37,12 +37,9 @@ export const readSqlFiles = async (directory: string, logFiles?: boolean): Promi
         const directoryContents = await fs.promises.readdir(directory)
         logFiles && log.debug(`Read following directory contents from directory '/${directory}':\n${directoryContents.join("\n")}`)
 
-        const contents = await Promise
+        return await Promise
             .all(directoryContents
             .map(filename => readFileContent(directory, filename)))
-
-        // log.debug(`Migration file contents: ${JSON.stringify(contents, null, 2)}`)
-        return contents
     }
     catch (error) {
         log.error("Failed to read SQL directory!")
