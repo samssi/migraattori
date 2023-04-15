@@ -30,12 +30,25 @@ const migrationTablesPresent = async (schemaName: string, tableName: string) => 
     return result.exists
 }
 
-const insertHistory = async (schemaName: string, sqlFile: SQLFile) => {
-    await sql`INSERT INTO migraattori.migration_history 
-              (migration_user, migration_file, migration_status, version)
-              VALUES (${username}, ${sqlFile.file}, 'done', ${sqlFile.version})
-    `
+// TODO: fix schemaname hard coding
+const selectMaxVersionFromHistory = async (schemaName: string) => {
+    interface Result {
+        max: number
+    }
+    const [result] = await sql<[Result?]>`SELECT max(version) FROM migration_history`
+    return result?.max || -1
 }
+
+// TODO: fix schemaname hard coding
+const insertHistory = async (sql: postgres.TransactionSql<Record<string, postgres.PostgresType>>, schemaName: string, sqlFile: SQLFile) => {
+    await sql`INSERT INTO migraattori.migration_history 
+              (migration_user, migration_file, version)
+              VALUES (${username}, ${sqlFile.file}, ${sqlFile.version})
+    `
+
+}
+
+const filterExistingVersions = (sqlFiles: SQLFile[], maxVersion: number) => sqlFiles.filter(sqlFile => sqlFile.version > maxVersion)
 
 const executeMigrationSqlFiles = async (sql: postgres.TransactionSql<Record<string, postgres.PostgresType>>, sqlFiles: SQLFile[]) => {
     for (const sqlFile of sqlFiles) {
@@ -44,8 +57,12 @@ const executeMigrationSqlFiles = async (sql: postgres.TransactionSql<Record<stri
 }
 
 const executeSqlFiles = async (sql: postgres.TransactionSql<Record<string, postgres.PostgresType>>, migrationSchemaName: string, sqlFiles: SQLFile[]) => {
+    sqlFiles.length > 0
+        ? console.info(`Attempting to run migration files:\n${sqlFiles.map(sqlFile => sqlFile.file).join("\n")}`)
+        : console.log('No new migrations to run')
+
     for (const sqlFile of sqlFiles) {
-        await insertHistory(migrationSchemaName, sqlFile)
+        await insertHistory(sql, migrationSchemaName, sqlFile)
         await sql.unsafe(sqlFile.content)
     }
 }
@@ -59,7 +76,7 @@ export const postgresJs: DatabaseDriver = {
         } else {
             await sql.begin(async sql => {
                 log.info("First run of migraattori detected. Establishing migraattori schema and system tables...")
-                await executeMigrationSqlFiles(sql, sqlFiles);
+                await executeMigrationSqlFiles(sql, sqlFiles)
             })
         }
     },
@@ -67,7 +84,8 @@ export const postgresJs: DatabaseDriver = {
     async migrationTransaction(sqlFiles: SQLFile[]): Promise<void> {
         await sql.begin(async sql => {
             log.info("Running migrations")
-            await executeSqlFiles(sql, defaultMigrationSchemaName, sqlFiles);
+            const maxVersion = await selectMaxVersionFromHistory(defaultMigrationSchemaName)
+            await executeSqlFiles(sql, defaultMigrationSchemaName, filterExistingVersions(sqlFiles, maxVersion))
         })
     },
     async closeConnection(): Promise<void> {

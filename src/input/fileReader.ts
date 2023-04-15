@@ -4,7 +4,7 @@ import * as log from "../output/log"
 export interface SQLFile {
     file: string,
     content: string,
-    version: string
+    version: number
 }
 
 const extractVersionNumber = (filename: string) => {
@@ -15,7 +15,7 @@ const extractVersionNumber = (filename: string) => {
         throw new Error('Invalid filename! Failed to parse version number from the filename')
     }
 
-    return version
+    return parseInt(version)
 }
 
 const readFileContent = async (directory: string, file: string): Promise<SQLFile> => {
@@ -35,7 +35,6 @@ const readFileContent = async (directory: string, file: string): Promise<SQLFile
 export const readSqlFiles = async (directory: string, logFiles?: boolean): Promise<SQLFile[]> => {
     try {
         const directoryContents = await fs.promises.readdir(directory)
-        logFiles && log.debug(`Read following directory contents from directory '/${directory}':\n${directoryContents.join("\n")}`)
 
         return await Promise
             .all(directoryContents
