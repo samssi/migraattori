@@ -49,7 +49,10 @@ export const postgresJs: DatabaseDriver = {
     },
 
     async migrationTransaction(sqlFiles: SQLFile[]): Promise<void> {
-        await sql.begin(async sql => await executeSqlFiles(sql, sqlFiles))
+        await sql.begin(async sql => {
+            log.info("Running migrations")
+            await executeSqlFiles(sql, sqlFiles);
+        })
     },
     async closeConnection(): Promise<void> {
         await sql.end()
