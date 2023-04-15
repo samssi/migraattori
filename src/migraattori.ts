@@ -1,19 +1,11 @@
 import {sql} from "./db/postgresDb";
-import {readSqlFiles} from "./input/fileReader";
-import {PostgresType, TransactionSql} from "postgres";
+import {readSqlFiles, SQLFile} from "./input/fileReader";
 
-const fileMigrations = async (sql: TransactionSql<Record<string, PostgresType>>) => {
-    const sqlFiles = await readSqlFiles("sql")
-
-    for (const sqlFile of sqlFiles) {
-        await sql.unsafe(sqlFile.content)
-    }
-
-}
-
-const migrationTransaction = async () => {
+const migrationTransaction = async (sqlFiles: SQLFile[]) => {
     await sql.begin(async sql => {
-        await fileMigrations(sql)
+        for (const sqlFile of sqlFiles) {
+            await sql.unsafe(sqlFile.content)
+        }
     })
 }
 
@@ -21,8 +13,10 @@ const migrationTransaction = async () => {
 
 const main = async () => {
     console.log("Migraattori starting...")
-    await migrationTransaction()
+    const sqlFiles = await readSqlFiles("sql")
+    await migrationTransaction(sqlFiles)
     await sql.end()
+    console.log("Migraattori executed successfully...")
 }
 
 (async function() {

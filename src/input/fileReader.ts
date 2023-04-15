@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as log from "../output/log"
 
-interface SQLFile {
+export interface SQLFile {
     file: string,
     content: string
 }
