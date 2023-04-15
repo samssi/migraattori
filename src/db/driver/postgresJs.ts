@@ -36,10 +36,10 @@ const migrationTablesPresent = async (schemaName: string, tableName: string) => 
 
 export const postgresJs: DatabaseDriver = {
     async establishMigrationDatabase(sqlFiles: SQLFile[]): Promise<void> {
-        const tablesPresent = await migrationTablesPresent(defaultMigrationSchemaName, migrationHistoryTableName)
+        const continueMigrations = await migrationTablesPresent(defaultMigrationSchemaName, migrationHistoryTableName)
 
-        if (tablesPresent) {
-            log.debug("Migration tables present. Continuing on migrations")
+        if (continueMigrations) {
+            log.debug("Migration tables present. Continuing on with the migrations")
         } else {
             await sql.begin(async sql => {
                 log.info("First run of migraattori detected. Establishing migraattori schema and system tables...")

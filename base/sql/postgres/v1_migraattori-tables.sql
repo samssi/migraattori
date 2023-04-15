@@ -1,4 +1,4 @@
-CREATE TABLE migration_history
+CREATE TABLE migraattori.migration_history
 (
     migration_id SERIAL,
     migration_user TEXT,
