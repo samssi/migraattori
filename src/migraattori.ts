@@ -1,6 +1,7 @@
 import {postgresJs, sql} from "./db/driver/postgresJs";
 import {readSqlFiles, SQLFile} from "./input/fileReader";
 import {DatabaseDriver} from "./db/driver";
+import * as log from "./output/log"
 
 const runMigrations = async (driver: DatabaseDriver) => {
     const migrationFiles = await readSqlFiles("sql")
@@ -11,9 +12,9 @@ const runMigrations = async (driver: DatabaseDriver) => {
 }
 
 const main = async () => {
-    console.log("Migraattori starting...")
+    log.info("Migraattori starting...")
     await runMigrations(postgresJs)
-    console.log("Migraattori executed successfully...")
+    log.info("Migraattori executed successfully...")
 }
 
 (async function() {
