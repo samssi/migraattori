@@ -8,11 +8,18 @@ interface SQLFile {
 
 const readFileContent = async (directory: string, file: string): Promise<SQLFile> => {
     const filepath = `${directory}/${file}`
-    const content = await fs.promises.readFile(filepath)
-    return { file, content: content.toString() }
+    try {
+        const content = await fs.promises.readFile(filepath)
+        return { file, content: content.toString() }
+    } catch (error) {
+        log.error(`Failed to read file: ${filepath}`)
+        log.error(error)
+        process.exit(1)
+    }
+
 }
 
-export const readSqlFiles = async (directory: string) => {
+export const readSqlFiles = async (directory: string): Promise<SQLFile[]> => {
     try {
         const directoryContents = await fs.promises.readdir(directory)
         log.debug(`Read following directory contents from directory '/${directory}':\n${directoryContents.join("\n")}`)
@@ -27,5 +34,6 @@ export const readSqlFiles = async (directory: string) => {
     catch (error) {
         log.error("Failed to read SQL directory!")
         log.error(error)
+        process.exit(1)
     }
 }
